@@ -1,5 +1,4 @@
-import base64
-
+from base64 import b64encode
 from locust import HttpUser, task
 from random import randint, choice
 
@@ -8,12 +7,14 @@ class WebUser(HttpUser):
 
     @task
     def load(self):
+        # user: foo, password: bar
+        user_pass = b64encode(b"foo:bar").decode("ascii")
         catalogue = self.client.get("/catalogue").json()
         category_item = choice(catalogue)
         item_id = category_item["id"]
 
         self.client.get("/")
-        self.client.get("/login", headers={"Authorization":"Basic Y2F6b3JsYTE5OjEyMw=="})
+        self.client.get("/login", headers={"Authorization":"Basic %s" % user_pass})
         self.client.get("/category.html")
         self.client.get("/detail.html?id={}".format(item_id))
         self.client.delete("/cart")
